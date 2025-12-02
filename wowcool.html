@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steal a Brainrot • Event Tracker</title>
+  <meta name="description" content="Live tracker for Steal a Brainrot events, Taco Tuesday admin abuse waves, and weekly updates. Never miss the chaos." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f0f0f;
+      --text-muted: #666666;
+      --card: #f7f7f7;
+      --border: #e0e0e0;
+      --accent: #ff4d6d;
+      --accent-hover: #ff3355;
+      --shadow: rgba(0,0,0,0.15);
+      --alert-bg: #ff1a44;
+      --alert-text: #ffffff;
+      --success: #00ff9d;
+      --warning: #ffcc00;
+      --live: #ff3355;
+    }
+    [data-theme="dark"] {
+      --bg: #0a0a0a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --card: #111111;
+      --border: #222222;
+      --accent: #ff4d6d;
+      --accent-hover: #ff3355;
+      --shadow: rgba(0,0,0,0.5);
+      --alert-bg: #ff1a44;
+      --alert-text: #ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      transition: background 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, .logo, .event-title { font-family: 'Kanit', sans-serif; }
+    header {
+      padding: 2.5rem 1rem 2rem;
+      text-align: center;
+      position: relative;
+      background: var(--bg);
+      box-shadow: 0 2px 20px var(--shadow);
+    }
+    .logo {
+      font-size: 4rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      background: linear-gradient(135deg, #ff4d6d 0%, #ff8c42 50%, #ff4d6d 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 0.25rem;
+    }
+    .theme-toggle, .notif-toggle {
+      position: absolute;
+      top: 2.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.4rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .theme-toggle { right: 7rem; }
+    .notif-toggle { right: 2rem; }
+    .theme-toggle:hover, .notif-toggle:hover {
+      transform: scale(1.05);
+      background: var(--accent);
+      color: white;
+    }
+    main { max-width: 1000px; margin: 0 auto; padding: 3rem 1rem; }
+    .hero {
+      text-align: center;
+      margin-bottom: 5rem;
+      background: var(--card);
+      border-radius: 24px;
+      padding: 3rem 2rem;
+      box-shadow: 0 20px 60px var(--shadow);
+    }
+    .game-icon {
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      margin: 0 auto 2rem;
+      box-shadow: 0 10px 30px var(--shadow);
+      display: block;
+    }
+    .thumbnail {
+      width: 100%;
+      max-width: 700px;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px var(--shadow);
+      margin: 2rem auto;
+      display: block;
+    }
+    .play-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: white;
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-family: 'Kanit', sans-serif;
+      padding: 1.4rem 5rem;
+      border-radius: 60px;
+      text-decoration: none;
+      margin-top: 2rem;
+      box-shadow: 0 15px 40px rgba(255,77,109,0.4);
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .play-btn:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(255,77,109,0.6);
+    }
+    .warning {
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .events {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 5rem;
+    }
+    .event-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .event-card.live {
+      border: 3px solid var(--live);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 10px 30px var(--shadow); }
+      50% { box-shadow: 0 10px 50px rgba(255,51,85,0.6); }
+      100% { box-shadow: 0 10px 30px var(--shadow); }
+    }
+    .event-card:hover { 
+      transform: translateY(-10px);
+      box-shadow: 0 20px 50px var(--shadow);
+    }
+    .event-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--accent) 0%, #ff8c42 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .event-time {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--accent);
+      margin: 1rem 0;
+      font-family: 'Kanit', sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .event-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .countdown {
+      font-family: 'Kanit', monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 1.5rem;
+      background: rgba(255,77,109,0.1);
+      padding: 0.8rem 1.5rem;
+      border-radius: 12px;
+      display: inline-block;
+      min-width: 180px;
+    }
+    .early-bird {
+      background: var(--warning) !important;
+      color: #000 !important;
+      font-weight: 900;
+      animation: flash 1.5s infinite;
+    }
+    @keyframes flash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .private-servers {
+      margin-top: 6rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+    .private-servers h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+    .private-servers p {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+    }
+    .private-note {
+      font-size: 0.9rem;
+      color: #ff6b6b;
+      margin-top: 1rem;
+      font-weight: 500;
+      font-style: italic;
+    }
+    .ps-input {
+      width: 100%;
+      padding: 1.2rem;
+      margin-top: 1.5rem;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+    .ps-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .save-btn {
+      margin-top: 1.5rem;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: white;
+      border: none;
+      border-radius: 60px;
+      font-weight: 700;
+      font-family: 'Kanit', sans-serif;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(255,77,109,0.4);
+    }
+    footer {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      border-top: 1px solid var(--border);
+      margin-top: 5rem;
+    }
+
+    /* Custom Alert */
+    #customAlert {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--alert-bg);
+      color: var(--alert-text);
+      padding: 1.2rem 2rem;
+      border-radius: 16px;
+      font-family: 'Kanit', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      box-shadow: 0 15px 40px rgba(255,26,68,0.5);
+      z-index: 9999;
+      transition: top 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      max-width: 90vw;
+      overflow: hidden;
+    }
+    #customAlert.show {
+      top: 2rem;
+    }
+    #customAlert .icon {
+      font-size: 1.8rem;
+      animation: bounce 1s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Web Push Prompt */
+    #pushPrompt {
+      position: fixed;
+      bottom: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 2px solid var(--accent);
+      color: var(--text);
+      padding: 1.5rem 2rem;
+      border-radius: 20px;
+      font-family: 'Kanit', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: 0 20px 60px var(--shadow);
+      z-index: 9998;
+      transition: bottom 0.5s ease;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      max-width: 90vw;
+      white-space: nowrap;
+    }
+    #pushPrompt.show {
+      bottom: 2rem;
+    }
+    #pushPrompt button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 1rem;
+    }
+    #pushPrompt button:hover {
+      background: var(--accent-hover);
+    }
+
+    @media (max-width: 768px) {
+      .logo { font-size: 3rem; }
+      .event-time { font-size: 2rem; }
+      .play-btn { font-size: 1.8rem; padding: 1.2rem 4rem; }
+      .events { grid-template-columns: 1fr; }
+      .private-servers { padding: 2rem 1.5rem; }
+      .theme-toggle { right: 5.5rem; }
+      .notif-toggle { right: 1rem; }
+      #customAlert { font-size: 1.1rem; padding: 1rem 1.5rem; }
+      #pushPrompt { font-size: 1rem; padding: 1.2rem 1.5rem; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme]) { 
+        --bg: #0a0a0a; --text: #ffffff; --text-muted: #aaaaaa; --card: #111111; --border: #222222; --shadow: rgba(0,0,0,0.5);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="logo">Steal a Brainrot</h1>
+    <p class="subtitle">Live Event & Admin Abuse Tracker</p>
+    <div class="theme-toggle" onclick="toggleTheme()">Moon</div>
+    <div class="notif-toggle" onclick="toggleNotifs()">Bell</div>
+  </header>
+
+  <main>
+    <section class="hero">
+<img src="https://tr.rbxcdn.com/180DAY-a034a2638ef315a9d4946bab4c42987d/512/512/Image/Webp/noFilter"
+     alt="Steal a Brainrot Icon"
+     class="game-icon"
+     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM1NTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JY29uPC90ZXh0Pjwvc3ZnPg=='">
+<img src="https://tr.rbxcdn.com/180DAY-9ee697e9d5113f403910e0e3c0c3bfd2/768/432/Image/Webp/noFilter"
+     alt="Steal a Brainrot Thumbnail"
+     class="thumbnail"
+     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM1NTUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5UaHVtYm5haWw8L3RleHQ+PC9zdmc+'">
+      <a href="#" class="play-btn" onclick="showWarning(event)">PLAY</a>
+      <p class="warning">Press PLAY to instantly join Steal a Brainrot.</p>
+    </section>
+
+    <div class="events">
+      <div class="event-card" id="tacoCard">
+        <h3 class="event-title">Taco Tuesday</h3>
+        <div class="event-time">6:00 PM EST</div>
+        <p class="event-desc">Weekly admin abuse begins every Tuesday<br>tacos</p>
+        <div class="countdown" id="tacoCountdown">Loading...</div>
+      </div>
+
+      <div class="event-card" id="updateCard">
+        <h3 class="event-title">Weekly Update</h3>
+        <div class="event-time">2:00 PM EST</div>
+        <p class="event-desc">New Brainrots<br>New Events.</p>
+        <div class="countdown" id="updateCountdown">Loading...</div>
+      </div>
+    </div>
+
+    <div class="private-servers">
+      <h2>Add Your Private Server</h2>
+      <p>Drop your private server link here. Next time you press PLAY, it'll automatically make you join into your private!</p>
+      <input type="text" class="ps-input" placeholder="https://www.roblox.com/share?code=..." id="psInput" />
+      <button class="save-btn" onclick="savePS()">Save & Lock In</button>
+      <p class="private-note">PRIVATE SERVERS ARE NOT TRACKED / LOGGED.</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Steal a Brainrot • Not affiliated with Roblox • Built for the true degenerates who live for the rot</p>
+  </footer>
+
+  <!-- Custom Alert -->
+  <div id="customAlert">
+    <span class="icon">Warning</span>
+    <span id="alertMessage">EVENT LIVE!</span>
+  </div>
+
+  <!-- Push Notification Prompt -->
+  <div id="pushPrompt">
+    <span>Bell</span>
+    <span>Get real-time alerts when events go live!</span>
+    <button onclick="requestPush()">Allow</button>
+    <button onclick="dismissPush()" style="background:#666;">No</button>
+  </div>
+
+  <script>
+    // === VAPID KEYS (REPLACE WITH YOUR OWN) ===
+    const vapidPublicKey = 'BO6CF_EsrvJ98tyw7OSCcKQUcnmbUROJEY9eoQhEOAqso404iGg9B7HaLyYAQfilhMFaLtoFNT9q9BLpWCIonBM';
+    let pushSub = null;
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+      return outputArray;
+    }
+
+    async function requestPush() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showCustomAlert('Push not supported', '#ff6b6b');
+        return;
+      }
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        });
+        pushSub = sub;
+        localStorage.setItem('pushEnabled', 'true');
+        showCustomAlert('Push ON', '#00ff9d');
+        document.getElementById('pushPrompt').classList.remove('show');
+        // Save subscription to backend
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub)
+        });
+      } catch (e) {
+        showCustomAlert('Push failed', '#ff6b6b');
+      }
+    }
+
+    function dismissPush() {
+      document.getElementById('pushPrompt').classList.remove('show');
+      localStorage.setItem('pushPromptSeen', 'true');
+    }
+
+    // === THEME & NOTIFS ===
+    function toggleTheme() {
+      const root = document.documentElement;
+      const current = root.getAttribute('data-theme');
+      const newTheme = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.querySelector('.theme-toggle').textContent = newTheme === 'dark' ? 'Sun' : 'Moon';
+    }
+
+    function toggleNotifs() {
+      const enabled = localStorage.getItem('notifs') !== 'false';
+      const newState = !enabled;
+      localStorage.setItem('notifs', newState);
+      document.querySelector('.notif-toggle').textContent = newState ? 'Bell Active' : 'Bell Off';
+      showCustomAlert(newState ? 'Site alerts ON' : 'Site alerts OFF', newState ? '#00ff9d' : '#666');
+    }
+
+    // Init
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.querySelector('.theme-toggle').textContent = 'Sun';
+    }
+
+    const notifsOn = localStorage.getItem('notifs') !== 'false';
+    document.querySelector('.notif-toggle').textContent = notifsOn ? 'Bell Active' : 'Bell Off';
+
+    // Show push prompt
+    if (!localStorage.getItem('pushPromptSeen') && !localStorage.getItem('pushEnabled')) {
+      setTimeout(() => {
+        document.getElementById('pushPrompt').classList.add('show');
+      }, 3000);
+    }
+
+    // === CUSTOM ALERT ===
+    function showCustomAlert(message, bg = null) {
+      const alert = document.getElementById('customAlert');
+      const msg = document.getElementById('alertMessage');
+      msg.textContent = message;
+      if (bg) alert.style.background = bg;
+      alert.classList.add('show');
+      setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => { alert.style.background = ''; }, 500);
+      }, 4000);
+    }
+
+    // === TIME LOGIC ===
+    let lastTacoNotif = 0;
+    let lastUpdateNotif = 0;
+    let lastEarlyBird = 0;
+
+    function getNextEventTime(isTaco) {
+      const now = new Date();
+      const isDST = now.toLocaleString('en-US', {timeZone: 'America/New_York'}).includes('EDT');
+      const offset = isDST ? 4 : 5;
+      const eventHourEST = isTaco ? 18 : 14;
+      const eventHourUTC = eventHourEST + offset;
+
+      let nextEvent = new Date(now);
+      const day = now.getUTCDay();
+      const targetDay = isTaco ? 2 : 6;
+
+      const daysUntil = (targetDay - day + 7) % 7;
+      if (daysUntil === 0 && now.getUTCHours() >= eventHourUTC) {
+        nextEvent.setUTCDate(nextEvent.getUTCDate() + 7);
+      } else {
+        nextEvent.setUTCDate(nextEvent.getUTCDate() + daysUntil);
+      }
+      nextEvent.setUTCHours(eventHourUTC, 0, 0, 0);
+      return nextEvent;
+    }
+
+    function getESTTime() {
+      const options = { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false };
+      return new Date().toLocaleString('en-US', options);
+    }
+
+    function updateCountdowns() {
+      const now = new Date();
+      const nextTaco = getNextEventTime(true);
+      const nextUpdate = getNextEventTime(false);
+
+      const tacoDiff = nextTaco - now;
+      const updateDiff = nextUpdate - now;
+
+      const tacoCD = document.getElementById('tacoCountdown');
+      const updateCD = document.getElementById('updateCountdown');
+      const tacoCard = document.getElementById('tacoCard');
+      const updateCard = document.getElementById('updateCard');
+
+      // Reset
+      tacoCard.classList.remove('live');
+      updateCard.classList.remove('live');
+      tacoCD.classList.remove('early-bird');
+
+      // Always show countdown
+      tacoCD.textContent = formatTime(tacoDiff);
+      updateCD.textContent = formatTime(updateDiff);
+
+      const [hour, minute] = getESTTime().split(':').map(Number);
+      const isTacoDay = now.getUTCDay() === 2;
+      const isUpdateDay = now.getUTCDay() === 6;
+
+      // === TACO TUESDAY ===
+      if (isTacoDay) {
+        if (hour === 17) {
+          if (Date.now() - lastEarlyBird > 60000) {
+            if (notifsOn) showCustomAlert('EARLY BIRD!!', '#ffcc00');
+            lastEarlyBird = Date.now();
+          }
+          tacoCD.textContent = 'POSSIBLE EARLY BIRD';
+          tacoCD.classList.add('early-bird');
+        }
+
+        if (hour >= 18 && hour < 20) {
+          tacoCard.classList.add('live');
+          if (Date.now() - lastTacoNotif > 300000) {
+            if (notifsOn) showCustomAlert('TACO TUESDAY!', '#ff1a44');
+            lastTacoNotif = Date.now();
+            triggerPush('TACO TUESDAY!', 'Admin abuse is LIVE!');
+          }
+        }
+      }
+
+      // === WEEKLY UPDATE ===
+      if (isUpdateDay && hour >= 14 && hour < 16) {
+        updateCard.classList.add('live');
+        if (Date.now() - lastUpdateNotif > 300000) {
+          if (notifsOn) showCustomAlert('UPDATE LIVE!', '#ff1a44');
+          lastUpdateNotif = Date.now();
+          triggerPush('UPDATE LIVE!', 'New stuff just dropped!');
+        }
+      }
+    }
+
+    function formatTime(ms) {
+      if (ms < 0) return 'Event Live!';
+      const days = Math.floor(ms / 86400000);
+      const hours = Math.floor((ms % 86400000) / 3600000);
+      const minutes = Math.floor((ms % 3600000) / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+    }
+
+    async function triggerPush(title, body) {
+      if (!pushSub) return;
+      try {
+        await fetch('/api/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sub: pushSub.toJSON(), title, body })
+        });
+      } catch (e) {}
+    }
+
+    setInterval(updateCountdowns, 1000);
+    updateCountdowns();
+
+    // === PLAY & PRIVATE SERVER ===
+    function showWarning(e) {
+      e.preventDefault();
+      const ps = localStorage.getItem('privateServer');
+      if (ps && ps.includes('roblox.com/share?code=')) {
+        showCustomAlert('Joining private...', '#00ff9d');
+        setTimeout(() => { location.href = ps; }, 800);
+        return;
+      }
+      showCustomAlert('Joining public...', '#ffcc00');
+      setTimeout(() => {
+        location.href = "roblox://experiences/start?placeId=109983668079237";
+      }, 800);
+    }
+
+    function savePS() {
+      const input = document.getElementById('psInput').value.trim();
+      const regex = /^https:\/\/www\.roblox\.com\/share\?code=[a-f0-9]{32}&type=Server$/;
+      if (input && regex.test(input)) {
+        localStorage.setItem('privateServer', input);
+        showCustomAlert('Private saved!', '#00ff9d');
+        document.querySelector('.ps-input').style.borderColor = '#00ff9d';
+      } else {
+        showCustomAlert('Invalid link!', '#ff1a44');
+        document.querySelector('.ps-input').style.borderColor = '#ff6b6b';
+      }
+    }
+
+    const savedPS = localStorage.getItem('privateServer');
+    if (savedPS) document.getElementById('psInput').value = savedPS;
+
+    // === ANIMATIONS ===
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      });
+      document.querySelectorAll('.event-card, .private-servers').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+      });
+    }
+  </script>
+</body>
+</html>
